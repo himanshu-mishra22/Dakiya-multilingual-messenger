@@ -1,9 +1,10 @@
 import express from "express";
 import { translateRawText } from "../services/translation.js";
+import { protect } from "../middleware/authMid.js";
 
 const router = express.Router();
 
-router.post("/", async (req, res) => {
+router.post("/",protect, async (req, res) => {
   try {
     const { text, targetLanguage, sourceLanguage } = req.body;
 

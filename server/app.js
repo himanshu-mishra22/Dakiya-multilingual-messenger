@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import translateRoutes from "./routes/translate.js";
-
+import authRoutes from "./routes/authRoute.js";
 const app = express();
 
 app.use(cors());
@@ -12,5 +12,6 @@ app.get("/api/test",(req,res)=>{
 });
 
 app.use("/api/translate", translateRoutes);
+app.use("/api/auth", authRoutes);
 
 export default app;

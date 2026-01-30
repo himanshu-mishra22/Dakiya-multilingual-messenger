@@ -4,14 +4,16 @@ import { translateStoredMessage } from "../services/translation.js";
 
 export const chatSocket = (io, socket) => {
 
+  const userId = socket.user.userId;
+
   socket.on("join_conversation", (conversationId) => {
     socket.join(conversationId);
   });
 
-  socket.on("send_message", async ({ conversationId, senderId, text }) => {
+  socket.on("send_message", async ({ conversationId, text }) => {
     const message = await Message.create({
       conversationId,
-      senderId,
+      senderId: userId,
       originalText: text
     });
 
