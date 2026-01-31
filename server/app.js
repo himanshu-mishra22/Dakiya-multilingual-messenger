@@ -13,5 +13,6 @@ app.get("/api/test",(req,res)=>{
 
 app.use("/api/translate", translateRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/chat", chatRoutes);
 
 export default app;

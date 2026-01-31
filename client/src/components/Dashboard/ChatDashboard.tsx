@@ -1,40 +1,70 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
+import { connectSocket, getSocket, disconnectSocket } from "../../utils/socket";
+
+import Sidebar from "./Sidebar";
+import ChatWindow from "./ChatWindow";
+
+interface Message {
+  originalText: string;
+}
+
+const CONVERSATION_ID = "REPLACE_WITH_REAL_ID";
+
 export default function Chat() {
+  const navigate = useNavigate();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [text, setText] = useState("");
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+
+    const socket = connectSocket(token);
+
+    socket.emit("join_conversation", CONVERSATION_ID);
+
+    socket.on("new_message", (message: Message) => {
+      setMessages((prev) => [...prev, message]);
+    });
+
+    return () => {
+      disconnectSocket();
+    };
+  }, []);
+
+  const sendMessage = () => {
+    if (!text.trim()) return;
+
+    const socket = getSocket();
+    if (!socket) return;
+
+    socket.emit("send_message", {
+      conversationId: CONVERSATION_ID,
+      text,
+    });
+
+    setText("");
+  };
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    disconnectSocket();
+    navigate("/login");
+  };
+
   return (
     <div className="h-screen grid grid-cols-[260px_1fr] bg-slate-900 text-slate-200">
-
-      {/* Sidebar */}
-      <aside className="border-r border-slate-800 p-4 space-y-3">
-        <h3 className="font-semibold">Chats</h3>
-        <div className="p-2 rounded-lg border border-slate-800 hover:bg-slate-800 cursor-pointer">
-          John
-        </div>
-        <div className="p-2 rounded-lg border border-slate-800 hover:bg-slate-800 cursor-pointer">
-          Maria
-        </div>
-      </aside>
-
-      {/* Chat Area */}
-      <main className="flex flex-col">
-        <div className="flex-1 p-4 space-y-3 overflow-y-auto">
-          <div className="max-w-xs p-3 rounded-xl bg-slate-800">
-            Hello 👋
-          </div>
-
-          <div className="max-w-xs p-3 rounded-xl bg-blue-600 ml-auto">
-            Hi there!
-          </div>
-        </div>
-
-        <div className="border-t border-slate-800 p-3 flex gap-2">
-          <input
-            placeholder="Type a message…"
-            className="flex-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600"
-          />
-          <button className="px-4 rounded-lg bg-blue-600 hover:bg-blue-500">
-            Send
-          </button>
-        </div>
-      </main>
+      <Sidebar onLogout={logout} />
+      <ChatWindow
+        messages={messages}
+        text={text}
+        onTextChange={setText}
+        onSend={sendMessage}
+      />
     </div>
   );
 }
